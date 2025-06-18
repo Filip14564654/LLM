@@ -1,0 +1,38 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from tokenizer.bpe_tokenizer import BPETokenizer
+
+# Zdrojový soubor zpracovaného trénovacího korpusu (vytvořeného skriptem download.py)
+TRAIN_FILE = "data/processed/piqa_train_formatted.txt"
+VOCAB_FILE = "tokenizer/vocab.json"
+
+
+def main():
+    if not os.path.exists(TRAIN_FILE):
+        raise FileNotFoundError(f"Trénovací soubor nenalezen: {TRAIN_FILE}")
+
+    print("[INFO] Načítám trénovací korpus pro BPE...")
+    with open(TRAIN_FILE, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    # Instancuj a trénuj BPE tokenizer (viz principy v minGPT, NanoGPT, gpt2-from-scratch)
+    tokenizer = BPETokenizer(vocab_size=5000)
+    tokenizer.train(lines)
+
+    print(f"[INFO] Ukládám slovník do {VOCAB_FILE}...")
+    os.makedirs(os.path.dirname(VOCAB_FILE), exist_ok=True)
+    tokenizer.save_vocab(VOCAB_FILE)
+
+    print("[DONE] Slovník úspěšně vytvořen a uložen.")
+
+
+if __name__ == "__main__":
+    main()
+
+# Skript train_tokenizer.py:
+# # Načte předzpracovaný PIQA trénovací soubor (data/processed/piqa_train_formatted.txt).
+# # Použije vlastní implementaci BPE tokenizéru inspirovanou repozitáři:
+# # # minGPT – ruční učení subword tokenů.
+# # # NanoGPT – serializace slovníku a jednoduché ovládání.
+# # # gpt2-from-scratch – explicitní trénovací fáze tokenizeru.

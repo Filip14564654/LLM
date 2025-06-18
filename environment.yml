@@ -1,0 +1,17 @@
+name: LLM
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pandas
+  - pip:
+      - datasets
+
+### ACTIVATE
+# conda activate LLM
+
+### UPDATE
+# conda env update -f environment.yml --prune
