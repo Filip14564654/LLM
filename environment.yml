@@ -2,13 +2,19 @@ name: LLM
 channels:
   - defaults
   - conda-forge
+  - pytorch
 dependencies:
   - python=3.10
   - pip
   - numpy
   - pandas
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cpuonly
   - pip:
       - datasets
+
 
 ### ACTIVATE
 # conda activate LLM

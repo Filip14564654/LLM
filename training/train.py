@@ -1,9 +1,11 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch import nn, optim
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
-import os
 import json
 import yaml
 from dataclasses import asdict
