@@ -5,18 +5,15 @@ from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
 import os
 import json
+import yaml
+from dataclasses import asdict
 
 # === Konfigurace ===
-CONFIG = {
-    "train_file": "data/processed/piqa_train_formatted.txt",
-    "val_file": "data/processed/piqa_validation_formatted.txt",
-    "vocab_file": "tokenizer/vocab.json",
-    "batch_size": 4,
-    "lr": 1e-4,
-    "epochs": 3,
-    "vocab_size": 10000,
-    "checkpoint_path": "model_checkpoint.pt"
-}
+def load_config(path="config.yaml"):
+    with open(path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+CONFIG = load_config()
 
 # === Dataset ===
 class PIQADataset(Dataset):
@@ -75,9 +72,20 @@ def main():
     train_loader = DataLoader(train_data, batch_size=CONFIG["batch_size"], shuffle=True, collate_fn=collate_fn)
     val_loader = DataLoader(val_data, batch_size=CONFIG["batch_size"], shuffle=False, collate_fn=collate_fn)
 
-    model = TransformerModel(vocab_size=CONFIG["vocab_size"]).to(device)
+    model_cfg = CONFIG.get("model", {})
+    model = TransformerModel(
+        vocab_size=CONFIG["vocab_size"],
+        embed_dim=model_cfg.get("embed_dim", 128),
+        num_heads=model_cfg.get("num_heads", 4),
+        ff_dim=model_cfg.get("ff_dim", 256),
+        num_layers=model_cfg.get("num_layers", 4),
+        max_len=model_cfg.get("max_len", 512),
+        dropout=model_cfg.get("dropout", 0.0),
+        positional_encoding=model_cfg.get("positional_encoding", "learned"),
+    ).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=CONFIG["lr"])
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(train_loader)*CONFIG["epochs"])
 
     for epoch in range(CONFIG["epochs"]):
         model.train()
@@ -86,15 +94,17 @@ def main():
             inputs = batch[:, :-1]
             targets = batch[:, 1:]
 
-            logits = model(inputs)
-            logits = logits.view(-1, logits.size(-1))
-            targets = targets.contiguous().view(-1)
+            with torch.cuda.amp.autocast(enabled=device.type == "cuda"):
+                logits = model(inputs)
+                logits = logits.view(-1, logits.size(-1))
+                targets = targets.contiguous().view(-1)
 
-            loss = criterion(logits, targets)
+                loss = criterion(logits, targets)
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+            scheduler.step()
 
             if i % 10 == 0:
                 print(f"[Epoch {epoch} | Batch {i}] Loss: {loss.item():.4f}")
