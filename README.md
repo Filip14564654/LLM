@@ -26,6 +26,8 @@ python training/train.py
 ```
 
 The script will save checkpoints to the path specified in the configuration.
+Sequences longer than `model.max_len` in `config.yaml` are automatically
+truncated during batching.
 
 ## Testing
 

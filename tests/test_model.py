@@ -1,7 +1,13 @@
 import unittest
-import torch
-from model.transformer import TransformerModel
+import importlib.util
 
+torch_spec = importlib.util.find_spec("torch")
+torch_available = torch_spec is not None
+if torch_available:
+    import torch
+    from model.transformer import TransformerModel
+
+@unittest.skipUnless(torch_available, "requires PyTorch")
 class ModelTest(unittest.TestCase):
     def test_forward_pass(self):
         model = TransformerModel(vocab_size=20, embed_dim=16, num_heads=2, ff_dim=32, num_layers=1, max_len=8)
