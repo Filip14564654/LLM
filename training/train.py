@@ -1,19 +1,16 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch import nn, optim
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
 import json
 import yaml
 from dataclasses import asdict
 
-    model_cfg = CONFIG.get("model", {})
-    max_len = model_cfg.get("max_len", 512)
-    truncated = [x[:max_len] for x in batch]
-    if not truncated:
-        return torch.empty(0, dtype=torch.long)
-    seq_len = max(len(x) for x in truncated)
-    padded = [torch.cat([x, torch.zeros(seq_len - len(x), dtype=torch.long)]) for x in truncated]
+def load_config(path="config.yaml"):
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
