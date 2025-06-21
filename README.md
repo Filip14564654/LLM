@@ -50,12 +50,12 @@ The script loads the checkpoint and validation file specified in `config.yaml` a
 
 ## Chatting with the model
 
-You can run a simple interactive demo that predicts the next token for a line of
-text. Start the script and type your prompt:
+You can run a simple interactive demo that generates a short sentence given your
+prompt. Start the script and type your text:
 
 ```bash
 python evaluation/chat.py
 ```
 
-Type `quit` to exit. The demo prints the predicted token (and its numeric ID)
-using a greedy decode.
+Type `quit` to exit. The demo prints the model's greedy completion of your
+prompt as plain text.

@@ -43,6 +43,27 @@ def predict_next(model, ids, device):
         next_id = torch.argmax(logits[0, -1]).item()
     return next_id
 
+def detokenize(tokens):
+    words = []
+    for t in tokens:
+        if t.endswith("</w>"):
+            words.append(t[:-4])
+        else:
+            words.append(t)
+    return " ".join(words)
+
+def generate_sentence(model, ids, device, id_lookup, max_new_tokens=20):
+    generated = []
+    current = ids[:]
+    for _ in range(max_new_tokens):
+        nxt = predict_next(model, current, device)
+        token = id_lookup.get(nxt, "<UNK>")
+        generated.append(token)
+        current.append(nxt)
+        if token.endswith(".</w>") or token.endswith("?</w>") or token.endswith("!</w>"):
+            break
+    return detokenize(generated)
+
 def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = BPETokenizer()
@@ -61,9 +82,8 @@ def main():
         if not ids:
             print("Model: <no input>")
             continue
-        pred_id = predict_next(model, ids, device)
-        token = id_lookup.get(pred_id, "<UNK>")
-        print(f"Model: {token} (id {pred_id})")
+        sentence = generate_sentence(model, ids, device, id_lookup)
+        print(f"Model: {sentence}")
 
 if __name__ == "__main__":
     main()
