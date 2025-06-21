@@ -47,3 +47,15 @@ python evaluation/eval_perplexity.py
 ```
 
 The script loads the checkpoint and validation file specified in `config.yaml` and prints the validation perplexity.
+
+## Chatting with the model
+
+You can run a simple interactive demo that predicts the next token for a line of
+text. Start the script and type your prompt:
+
+```bash
+python evaluation/chat.py
+```
+
+Type `quit` to exit. The demo prints the predicted token (and its numeric ID)
+using a greedy decode.

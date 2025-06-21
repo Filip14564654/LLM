@@ -1,0 +1,69 @@
+import torch
+import json
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from tokenizer.bpe_tokenizer import BPETokenizer
+from model.transformer import TransformerModel
+from utils.functions import load_config
+
+CONFIG = load_config()
+
+def build_id_lookup(vocab_file, vocab_size):
+    with open(vocab_file, "r", encoding="utf-8") as f:
+        vocab = json.load(f)
+    table = {}
+    for token in vocab:
+        tid = hash(token) % vocab_size
+        if tid not in table:
+            table[tid] = token
+    return table
+
+def load_model(device):
+    cfg = CONFIG.get("model", {})
+    model = TransformerModel(
+        vocab_size=CONFIG["vocab_size"],
+        embed_dim=cfg.get("embed_dim", 128),
+        num_heads=cfg.get("num_heads", 4),
+        ff_dim=cfg.get("ff_dim", 256),
+        num_layers=cfg.get("num_layers", 4),
+        max_len=cfg.get("max_len", 512),
+        dropout=cfg.get("dropout", 0.0),
+        positional_encoding=cfg.get("positional_encoding", "learned"),
+    ).to(device)
+    model.load_state_dict(torch.load(CONFIG["checkpoint_path"], map_location=device))
+    model.eval()
+    return model
+
+def predict_next(model, ids, device):
+    inp = torch.tensor([ids], dtype=torch.long).to(device)
+    with torch.no_grad():
+        logits = model(inp)
+        next_id = torch.argmax(logits[0, -1]).item()
+    return next_id
+
+def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    tokenizer = BPETokenizer()
+    tokenizer.load_vocab(CONFIG["vocab_file"])
+    id_lookup = build_id_lookup(CONFIG["vocab_file"], CONFIG["vocab_size"])
+    model = load_model(device)
+
+    print("Type 'quit' to exit.")
+    while True:
+        text = input("You: ")
+        if text.lower() in {"quit", "exit"}:
+            break
+        tokens = tokenizer.tokenize(text)
+        flat = [t for sub in tokens for t in sub]
+        ids = [hash(t) % CONFIG["vocab_size"] for t in flat]
+        if not ids:
+            print("Model: <no input>")
+            continue
+        pred_id = predict_next(model, ids, device)
+        token = id_lookup.get(pred_id, "<UNK>")
+        print(f"Model: {token} (id {pred_id})")
+
+if __name__ == "__main__":
+    main()
