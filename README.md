@@ -58,4 +58,6 @@ python evaluation/chat.py
 ```
 
 Type `quit` to exit. The demo prints the model's greedy completion of your
-prompt as plain text.
+prompt as plain text. The demo builds a token lookup table using frequencies from
+`vocab.json` so that the most common token is chosen when multiple tokens hash to
+the same ID.

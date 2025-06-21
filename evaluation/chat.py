@@ -11,10 +11,23 @@ from utils.functions import load_config
 CONFIG = load_config()
 
 def build_id_lookup(vocab_file, vocab_size):
+    """Return a mapping from hashed token ID to a representative token.
+
+    Because multiple tokens can map to the same hashed ID, we pick the most
+    frequent token for each ID based on the counts stored in ``vocab_file``.
+    ``vocab_file`` is expected to contain a JSON object mapping tokens to
+    frequency counts as produced by ``BPETokenizer``.
+    """
+
     with open(vocab_file, "r", encoding="utf-8") as f:
         vocab = json.load(f)
+
+    # Sort tokens by descending frequency to choose the most common token for
+    # each ID.  ``vocab`` maps token -> count.
+    sorted_tokens = sorted(vocab.items(), key=lambda kv: kv[1], reverse=True)
+
     table = {}
-    for token in vocab:
+    for token, _ in sorted_tokens:
         tid = hash(token) % vocab_size
         if tid not in table:
             table[tid] = token
