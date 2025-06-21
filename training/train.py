@@ -9,10 +9,7 @@ from model.transformer import TransformerModel
 import json
 import yaml
 from dataclasses import asdict
-
-def load_config(path="config.yaml"):
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+from utils.functions import load_config
 
 CONFIG = load_config()
 
@@ -35,7 +32,8 @@ class PIQADataset(Dataset):
 
 def collate_fn(batch):
     batch = [item for item in batch if len(item) > 1]
-    max_len = max(len(x) for x in batch)
+    max_len = CONFIG["model"]["max_len"]
+    batch = [x[:max_len] for x in batch]  # truncate
     padded = [torch.cat([x, torch.zeros(max_len - len(x), dtype=torch.long)]) for x in batch]
     return torch.stack(padded)
 
