@@ -49,12 +49,16 @@ def load_model(device):
     model.eval()
     return model
 
-def predict_next(model, ids, device):
+def sample_next(model, ids, device, k=3, temperature=1.0):
+    """Return the next token ID using top-k sampling."""
     inp = torch.tensor([ids], dtype=torch.long).to(device)
     with torch.no_grad():
-        logits = model(inp)
-        next_id = torch.argmax(logits[0, -1]).item()
-    return next_id
+        logits = model(inp)[0, -1]
+        logits = logits / temperature
+        probs = torch.softmax(logits, dim=-1)
+        topk = torch.topk(probs, k)
+        choice = torch.multinomial(topk.values, 1).item()
+        return topk.indices[choice].item()
 
 def detokenize(tokens):
     words = []
@@ -69,7 +73,7 @@ def generate_sentence(model, ids, device, id_lookup, max_new_tokens=20):
     generated = []
     current = ids[:]
     for _ in range(max_new_tokens):
-        nxt = predict_next(model, current, device)
+        nxt = sample_next(model, current, device)
         token = id_lookup.get(nxt, "<UNK>")
         generated.append(token)
         current.append(nxt)

@@ -57,7 +57,7 @@ prompt. Start the script and type your text:
 python evaluation/chat.py
 ```
 
-Type `quit` to exit. The demo prints the model's greedy completion of your
-prompt as plain text. The demo builds a token lookup table using frequencies from
-`vocab.json` so that the most common token is chosen when multiple tokens hash to
-the same ID.
+Type `quit` to exit. The demo now uses top-k sampling (k=3) instead of greedy
+decoding to produce a short sentence. It still builds a token lookup table using
+frequencies from `vocab.json` so that the most common token is chosen when
+multiple tokens hash to the same ID.
