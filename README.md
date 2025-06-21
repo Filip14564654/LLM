@@ -37,3 +37,13 @@ Basic unit tests are located in `tests/`. Run them with:
 python -m unittest discover tests
 ```
 
+
+## Evaluating a trained model
+
+After training finishes, you can measure perplexity on the validation set using `evaluation/eval_perplexity.py`:
+
+```bash
+python evaluation/eval_perplexity.py
+```
+
+The script loads the checkpoint and validation file specified in `config.yaml` and prints the validation perplexity.
