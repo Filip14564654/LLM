@@ -3,18 +3,18 @@ from torch.utils.data import Dataset, DataLoader
 from torch import nn, optim
 import sys
 import os
+import hashlib
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
-import json
-import yaml
-from dataclasses import asdict
-from utils.functions import load_config
+from utils.functions import load_config, stable_hash, next_version_path
 
 CONFIG = load_config()
 
 # === Dataset ===
-class PIQADataset(Dataset):
+class TextDataset(Dataset):
+    """Simple line-based text dataset used for pretraining and fine-tuning."""
+
     def __init__(self, filepath, tokenizer):
         with open(filepath, "r", encoding="utf-8") as f:
             self.lines = [line.strip() for line in f if line.strip()]
@@ -26,8 +26,12 @@ class PIQADataset(Dataset):
     def __getitem__(self, idx):
         tokens = self.tokenizer.tokenize(self.lines[idx])
         flat = [tok for sublist in tokens for tok in sublist]
-        token_ids = [hash(t) % CONFIG["vocab_size"] for t in flat]
+        token_ids = [stable_hash(t, CONFIG["vocab_size"]) for t in flat]
         return torch.tensor(token_ids, dtype=torch.long)
+
+
+class PIQADataset(TextDataset):
+    pass
 
 
 def collate_fn(batch):
@@ -68,6 +72,19 @@ def main():
     train_data = PIQADataset(CONFIG["train_file"], tokenizer)
     val_data = PIQADataset(CONFIG["val_file"], tokenizer)
 
+    pretrain_file = CONFIG.get("pretrain_file")
+    pretrain_epochs = CONFIG.get("pretrain_epochs", 0)
+    if pretrain_file and pretrain_epochs > 0:
+        pretrain_data = TextDataset(pretrain_file, tokenizer)
+        pretrain_loader = DataLoader(
+            pretrain_data,
+            batch_size=CONFIG["batch_size"],
+            shuffle=True,
+            collate_fn=collate_fn,
+        )
+    else:
+        pretrain_loader = None
+
     train_loader = DataLoader(train_data, batch_size=CONFIG["batch_size"], shuffle=True, collate_fn=collate_fn)
     val_loader = DataLoader(val_data, batch_size=CONFIG["batch_size"], shuffle=False, collate_fn=collate_fn)
 
@@ -84,11 +101,14 @@ def main():
     ).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=CONFIG["lr"])
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=len(train_loader)*CONFIG["epochs"])
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=len(train_loader) * (CONFIG.get("epochs", 0) + pretrain_epochs),
+    )
 
-    for epoch in range(CONFIG["epochs"]):
+    def train_epoch(loader, epoch_desc=""):
         model.train()
-        for i, batch in enumerate(train_loader):
+        for i, batch in enumerate(loader):
             batch = batch.to(device)
             inputs = batch[:, :-1]
             targets = batch[:, 1:]
@@ -97,7 +117,6 @@ def main():
                 logits = model(inputs)
                 logits = logits.view(-1, logits.size(-1))
                 targets = targets.contiguous().view(-1)
-
                 loss = criterion(logits, targets)
 
             optimizer.zero_grad()
@@ -106,11 +125,21 @@ def main():
             scheduler.step()
 
             if i % 10 == 0:
-                print(f"[Epoch {epoch} | Batch {i}] Loss: {loss.item():.4f}")
+                print(f"[{epoch_desc}Batch {i}] Loss: {loss.item():.4f}")
 
-        # === Uložení checkpointu ===
-        torch.save(model.state_dict(), CONFIG["checkpoint_path"])
-        print(f"[INFO] Model uložen do {CONFIG['checkpoint_path']}")
+    # Optional pretraining stage
+    if pretrain_loader is not None:
+        for epoch in range(pretrain_epochs):
+            train_epoch(pretrain_loader, epoch_desc=f"Pretrain {epoch} | ")
+
+    # Fine-tuning on task data
+    for epoch in range(CONFIG["epochs"]):
+        train_epoch(train_loader, epoch_desc=f"Epoch {epoch} | ")
+
+        # === Uložení checkpointu včetně verze ===
+        save_path = next_version_path(CONFIG["checkpoint_path"])
+        torch.save(model.state_dict(), save_path)
+        print(f"[INFO] Model uložen do {save_path}")
 
         # === Validace ===
         ppl = evaluate(model, val_loader, criterion, device)
@@ -119,3 +148,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

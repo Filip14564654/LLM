@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
-from utils.functions import load_config
+from utils.functions import load_config, stable_hash, latest_version_path
 
 # === Load config and model ===
 CONFIG = load_config()  # same config used in training
@@ -20,7 +20,10 @@ model = TransformerModel(
     dropout=model_cfg.get("dropout", 0.0),
     positional_encoding=model_cfg.get("positional_encoding", "learned"),
 )
-model.load_state_dict(torch.load("model_checkpoint.pt", map_location="cpu"))
+ckpt = latest_version_path(CONFIG["checkpoint_path"])
+if ckpt is None:
+    raise FileNotFoundError("No checkpoint found")
+model.load_state_dict(torch.load(ckpt, map_location="cpu"))
 model.eval()
 
 tokenizer = BPETokenizer()
@@ -30,7 +33,7 @@ tokenizer.load_vocab(CONFIG["vocab_file"])
 text = "Why do birds"
 tokens = tokenizer.tokenize(text)
 flat_tokens = [tok for sublist in tokens for tok in sublist]
-token_ids = [hash(t) % CONFIG["vocab_size"] for t in flat_tokens]
+token_ids = [stable_hash(t, CONFIG["vocab_size"]) for t in flat_tokens]
 input_tensor = torch.tensor([token_ids], dtype=torch.long)
 
 with torch.no_grad():
@@ -40,3 +43,4 @@ with torch.no_grad():
 
 # You may want a reverse-vocab or decoding logic
 print("Predicted next token ID:", predicted_token_id)
+

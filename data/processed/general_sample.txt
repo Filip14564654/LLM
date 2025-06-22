@@ -1,0 +1,4 @@
+Hello world.
+This is a sample corpus for pretraining.
+It contains a few sentences about general topics.
+The goal is to teach the model basic language patterns.
