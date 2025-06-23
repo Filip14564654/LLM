@@ -3,3 +3,4 @@ data/raw/shakespeare.txt
 data/processed/shakespeare_train.txt
 data/processed/shakespeare_validation.txt
 **/__pycache__/
+*.pyc

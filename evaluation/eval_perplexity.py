@@ -6,7 +6,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
-from utils.functions import load_config
+from utils.functions import load_config, stable_hash, latest_version_path
 
 CONFIG = load_config()
 
@@ -22,7 +22,7 @@ class TextDataset(Dataset):
     def __getitem__(self, idx):
         tokens = self.tokenizer.tokenize(self.lines[idx])
         flat = [tok for sublist in tokens for tok in sublist]
-        ids = [hash(t) % CONFIG["vocab_size"] for t in flat]
+        ids = [stable_hash(t, CONFIG["vocab_size"]) for t in flat]
         return torch.tensor(ids, dtype=torch.long)
 
 def collate_fn(batch):
@@ -65,10 +65,14 @@ def main():
         dropout=model_cfg.get("dropout", 0.0),
         positional_encoding=model_cfg.get("positional_encoding", "learned"),
     ).to(device)
-    model.load_state_dict(torch.load(CONFIG["checkpoint_path"], map_location=device))
+    ckpt = latest_version_path(CONFIG["checkpoint_path"])
+    if ckpt is None:
+        raise FileNotFoundError("No checkpoint found")
+    model.load_state_dict(torch.load(ckpt, map_location=device))
     criterion = nn.CrossEntropyLoss()
     ppl = evaluate(model, loader, criterion, device)
     print(f"Validation perplexity: {ppl:.2f}")
 
 if __name__ == "__main__":
     main()
+

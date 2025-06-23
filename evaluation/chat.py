@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
-from utils.functions import load_config
+from utils.functions import load_config, stable_hash, latest_version_path
 
 CONFIG = load_config()
 
@@ -28,7 +28,7 @@ def build_id_lookup(vocab_file, vocab_size):
 
     table = {}
     for token, _ in sorted_tokens:
-        tid = hash(token) % vocab_size
+        tid = stable_hash(token, vocab_size)
         if tid not in table:
             table[tid] = token
     return table
@@ -45,7 +45,10 @@ def load_model(device):
         dropout=cfg.get("dropout", 0.0),
         positional_encoding=cfg.get("positional_encoding", "learned"),
     ).to(device)
-    model.load_state_dict(torch.load(CONFIG["checkpoint_path"], map_location=device))
+    ckpt = latest_version_path(CONFIG["checkpoint_path"])
+    if ckpt is None:
+        raise FileNotFoundError("No checkpoint found")
+    model.load_state_dict(torch.load(ckpt, map_location=device))
     model.eval()
     return model
 
@@ -95,7 +98,7 @@ def main():
             break
         tokens = tokenizer.tokenize(text)
         flat = [t for sub in tokens for t in sub]
-        ids = [hash(t) % CONFIG["vocab_size"] for t in flat]
+        ids = [stable_hash(t, CONFIG["vocab_size"]) for t in flat]
         if not ids:
             print("Model: <no input>")
             continue
@@ -104,3 +107,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

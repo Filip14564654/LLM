@@ -25,9 +25,18 @@ Edit `config.yaml` to adjust model and training parameters. Then run:
 python training/train.py
 ```
 
-The script will save checkpoints to the path specified in the configuration.
+The script will save checkpoints to the path specified in the configuration.  If
+the file already exists, a version suffix (``_vN``) is appended so older
+checkpoints are preserved.
 Sequences longer than `model.max_len` in `config.yaml` are automatically
 truncated during batching.
+
+### Pretraining
+
+If `pretrain_file` is set in `config.yaml`, `training/train.py` will first run a
+pretraining stage on that corpus for the number of epochs specified by
+`pretrain_epochs`. A small sample corpus is provided in
+`data/processed/general_sample.txt` as an example.
 
 ## Testing
 
@@ -46,7 +55,8 @@ After training finishes, you can measure perplexity on the validation set using 
 python evaluation/eval_perplexity.py
 ```
 
-The script loads the checkpoint and validation file specified in `config.yaml` and prints the validation perplexity.
+The script loads the most recent checkpoint matching the path in
+`config.yaml` and prints the validation perplexity.
 
 ## Chatting with the model
 
@@ -58,6 +68,6 @@ python evaluation/chat.py
 ```
 
 Type `quit` to exit. The demo now uses top-k sampling (k=3) instead of greedy
-decoding to produce a short sentence. It still builds a token lookup table using
-frequencies from `vocab.json` so that the most common token is chosen when
-multiple tokens hash to the same ID.
+decoding to produce a short sentence. Token IDs are derived using a stable MD5
+hash so that the mapping is consistent across runs. The script automatically
+loads the latest checkpoint.
