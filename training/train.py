@@ -3,7 +3,6 @@ from torch.utils.data import Dataset, DataLoader
 from torch import nn, optim
 import sys
 import os
-import hashlib
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
@@ -69,19 +68,6 @@ def main():
 
     train_data = TextDataset(CONFIG["train_file"], tokenizer)
     val_data = TextDataset(CONFIG["val_file"], tokenizer)
-
-    pretrain_file = CONFIG.get("pretrain_file")
-    pretrain_epochs = CONFIG.get("pretrain_epochs", 0)
-    if pretrain_file and pretrain_epochs > 0:
-        pretrain_data = TextDataset(pretrain_file, tokenizer)
-        pretrain_loader = DataLoader(
-            pretrain_data,
-            batch_size=CONFIG["batch_size"],
-            shuffle=True,
-            collate_fn=collate_fn,
-        )
-    else:
-        pretrain_loader = None
 
     pretrain_file = CONFIG.get("pretrain_file")
     pretrain_epochs = CONFIG.get("pretrain_epochs", 0)
