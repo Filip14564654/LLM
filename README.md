@@ -10,7 +10,7 @@ This repository provides a minimal but flexible setup for experimenting with Tra
 pip install torch datasets pyyaml
 ```
 
-2. (Optional) Prepare the PIQA dataset:
+2. (Optional) Prepare the Tiny Shakespeare dataset:
 
 ```bash
 python data/download.py

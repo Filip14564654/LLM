@@ -14,7 +14,7 @@ from utils.functions import load_config
 CONFIG = load_config()
 
 # === Dataset ===
-class PIQADataset(Dataset):
+class TextDataset(Dataset):
     def __init__(self, filepath, tokenizer):
         with open(filepath, "r", encoding="utf-8") as f:
             self.lines = [line.strip() for line in f if line.strip()]
@@ -65,8 +65,8 @@ def main():
     tokenizer = BPETokenizer()
     tokenizer.load_vocab(CONFIG["vocab_file"])
 
-    train_data = PIQADataset(CONFIG["train_file"], tokenizer)
-    val_data = PIQADataset(CONFIG["val_file"], tokenizer)
+    train_data = TextDataset(CONFIG["train_file"], tokenizer)
+    val_data = TextDataset(CONFIG["val_file"], tokenizer)
 
     train_loader = DataLoader(train_data, batch_size=CONFIG["batch_size"], shuffle=True, collate_fn=collate_fn)
     val_loader = DataLoader(val_data, batch_size=CONFIG["batch_size"], shuffle=False, collate_fn=collate_fn)

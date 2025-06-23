@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from tokenizer.bpe_tokenizer import BPETokenizer
 
 # Zdrojový soubor zpracovaného trénovacího korpusu (vytvořeného skriptem download.py)
-TRAIN_FILE = "data/processed/piqa_train_formatted.txt"
+TRAIN_FILE = "data/processed/shakespeare_train.txt"
 VOCAB_FILE = "tokenizer/vocab.json"
 
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     main()
 
 # Skript train_tokenizer.py:
-# # Načte předzpracovaný PIQA trénovací soubor (data/processed/piqa_train_formatted.txt).
+# # Načte předzpracovaný Shakespeare trénovací soubor (data/processed/shakespeare_train.txt).
 # # Použije vlastní implementaci BPE tokenizéru inspirovanou repozitáři:
 # # # minGPT – ruční učení subword tokenů.
 # # # NanoGPT – serializace slovníku a jednoduché ovládání.

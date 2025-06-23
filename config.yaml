@@ -1,6 +1,6 @@
 # Default training configuration
-train_file: data/processed/piqa_train_formatted.txt
-val_file: data/processed/piqa_validation_formatted.txt
+train_file: data/processed/shakespeare_train.txt
+val_file: data/processed/shakespeare_validation.txt
 vocab_file: tokenizer/vocab.json
 vocab_size: 10000
 batch_size: 4

@@ -1,46 +1,40 @@
 import os
-import json
-from datasets import load_dataset
+import urllib.request
 
 RAW_DIR = "data/raw"
 PROCESSED_DIR = "data/processed"
+SHAKESPEARE_URL = "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt"
 
 
-def download_and_prepare_piqa():
+def download_and_prepare_shakespeare():
     os.makedirs(RAW_DIR, exist_ok=True)
     os.makedirs(PROCESSED_DIR, exist_ok=True)
 
-    print("\n[INFO] Stahuji dataset PIQA z Hugging Face...")
-    dataset = load_dataset("ybisk/piqa")
+    raw_path = os.path.join(RAW_DIR, "shakespeare.txt")
+    print("[INFO] Downloading Tiny Shakespeare dataset...")
+    urllib.request.urlretrieve(SHAKESPEARE_URL, raw_path)
 
-    print("[INFO] Ukládám surová data...")
-    for split in ["train", "validation", "test"]:
-        split_data = dataset[split]
-        raw_path = os.path.join(RAW_DIR, f"piqa_{split}.jsonl")
-        with open(raw_path, "w", encoding="utf-8") as f:
-            for item in split_data:
-                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    print("[INFO] Splitting into train/validation...")
+    with open(raw_path, "r", encoding="utf-8") as f:
+        lines = [l.strip() for l in f.readlines() if l.strip()]
 
-    print("[INFO] Základní preprocessing...")
-    for split in ["train", "validation", "test"]:
-        input_path = os.path.join(RAW_DIR, f"piqa_{split}.jsonl")
-        output_path = os.path.join(PROCESSED_DIR, f"piqa_{split}_formatted.txt")
+    split_idx = int(len(lines) * 0.9)
+    train_lines = lines[:split_idx]
+    val_lines = lines[split_idx:]
 
-        with open(input_path, "r", encoding="utf-8") as infile, \
-             open(output_path, "w", encoding="utf-8") as outfile:
+    train_path = os.path.join(PROCESSED_DIR, "shakespeare_train.txt")
+    val_path = os.path.join(PROCESSED_DIR, "shakespeare_validation.txt")
 
-            for line in infile:
-                data = json.loads(line)
-                premise = data["goal"].strip()
-                choice1 = data["sol1"].strip()
-                choice2 = data["sol2"].strip()
-                label = str(data.get("label", ""))  # prázdný pro test set
+    with open(train_path, "w", encoding="utf-8") as f:
+        for line in train_lines:
+            f.write(line + "\n")
 
-                example_text = f"Q: {premise}\nA) {choice1}\nB) {choice2}\nAnswer: {label}\n\n"
-                outfile.write(example_text)
+    with open(val_path, "w", encoding="utf-8") as f:
+        for line in val_lines:
+            f.write(line + "\n")
 
-    print("[DONE] Dataset PIQA byl stažen a předzpracován.")
+    print("[DONE] Tiny Shakespeare downloaded and processed.")
 
 
 if __name__ == "__main__":
-    download_and_prepare_piqa()
+    download_and_prepare_shakespeare()
