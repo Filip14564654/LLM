@@ -4,11 +4,14 @@ This repository provides a minimal but flexible setup for experimenting with Tra
 
 ## Setup
 
-1. Install Python dependencies (PyTorch, datasets, PyYAML):
+1. Create and activate the Conda environment:
 
 ```bash
-pip install torch datasets pyyaml
+conda env create -f environment.yml
+conda activate LLM
 ```
+
+If you prefer using ``pip`` directly, install ``torch``, ``datasets`` and ``pyyaml`` manually.
 
 2. (Optional) Prepare the Tiny Shakespeare dataset:
 
