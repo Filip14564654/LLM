@@ -1,19 +1,21 @@
-# Default training configuration
 train_file: data/processed/shakespeare_train.txt
 val_file: data/processed/shakespeare_validation.txt
 vocab_file: tokenizer/vocab.json
-vocab_size: 10000
-batch_size: 4
-lr: 0.001
-pretrain_file: data/processed/general_sample.txt
-pretrain_epochs: 1
-epochs: 3
+vocab_size: 2000
+
+batch_size: 32
+lr: 5e-4
+epochs: 20
+pretrain_file: null
+pretrain_epochs: 0
+
 model:
-  embed_dim: 128
-  num_heads: 4
-  ff_dim: 256
-  num_layers: 4
-  max_len: 512
+  embed_dim: 512
+  num_heads: 8
+  ff_dim: 2048
+  num_layers: 6
+  max_len: 256
   dropout: 0.1
   positional_encoding: learned
-checkpoint_path: model_checkpoint.pt
+
+checkpoint_path: trained_model.pt
