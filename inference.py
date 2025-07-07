@@ -3,29 +3,31 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import json
-
+import yaml
 from tokenizer.test_bpe_tokenizer import BPETokenizer
 from training.test_train import TransformerLanguageModel  # přizpůsob cestu podle umístění modelu
+from tokenizer.char_tokenizer import CharTokenizer  # nový tokenizer
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-MODEL_PATH = "trained_model.pt"
-VOCAB_PATH = "tokenizer/vocab.json"
-MODEL_DIM = 256
-MAX_NEW_TOKENS = 50
-MAX_INPUT_LENGTH = 128
 
-def load_model(tokenizer):
+def load_config(path="config.yaml"):
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
+
+def load_model(tokenizer, config):
     model = TransformerLanguageModel(
         vocab_size=len(tokenizer.vocab),
-        d_model=MODEL_DIM
+        d_model=config["model"]["embed_dim"],
+        nhead=config["model"]["num_heads"],
+        num_layers=config["model"]["num_layers"]
     ).to(DEVICE)
-    model.load_state_dict(torch.load(MODEL_PATH, map_location=DEVICE))
+    model.load_state_dict(torch.load(config["checkpoint_path"], map_location=DEVICE))
     model.eval()
     return model
 
 @torch.no_grad()
-def generate(model, tokenizer, prompt, max_new_tokens=50):
-    input_ids = tokenizer.encode(prompt)[:MAX_INPUT_LENGTH]
+def generate(model, tokenizer, prompt, config, max_new_tokens=50):
+    input_ids = tokenizer.encode(prompt)[:config["model"]["max_len"] - 1]  # -1 pro <eos> token
 
     if not input_ids:
         print("[ERROR] Tokenizer nerozpoznal žádné tokeny – prompt je mimo slovník.")
@@ -75,11 +77,12 @@ def top_k_logits(logits, k):
     return torch.where(logits < min_values, torch.full_like(logits, -float('Inf')), logits)
 
 def main():
+    config = load_config("config.yaml")
     print("[INFO] Načítám tokenizer a model...")
-    tokenizer = BPETokenizer()
+    tokenizer = CharTokenizer()
+    tokenizer.load(config["vocab_file"])
     print(f"[DEBUG] Skutečná velikost slovníku po trénování: {len(tokenizer.vocab)}")
-    tokenizer.load(VOCAB_PATH)
-    model = load_model(tokenizer)
+    model = load_model(tokenizer, config)
     print(tokenizer.encode("Caius"))
 
 
@@ -89,7 +92,7 @@ def main():
         if not prompt:
             print("Ukončuji...")
             break
-        output = generate(model, tokenizer, prompt, max_new_tokens=MAX_NEW_TOKENS)
+        output = generate(model, tokenizer, prompt, config, max_new_tokens=config["model"]["max_len"] - 1)
         print("=== VÝSTUP ===")
         print(output)
         print("=" * 40)

@@ -2,9 +2,11 @@ import re
 import json
 from collections import defaultdict, Counter
 from typing import List, Tuple
+from torch.utils.data import Dataset
+import torch
 
 class BPETokenizer:
-    def __init__(self, vocab_size=5000):
+    def __init__(self, vocab_size=64):
         self.vocab_size = vocab_size
         self.vocab = {}
         self.merges = []
@@ -108,7 +110,7 @@ class BPETokenizer:
     def load(self, path: str):
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        self.vocab = data["vocab"]
+        self.vocab = data["vocab_file"]
         self.merges = [tuple(m) for m in data["merges"]]
 
         if "<unk>" not in self.vocab:

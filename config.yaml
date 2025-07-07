@@ -1,20 +1,20 @@
 train_file: data/processed/shakespeare_train.txt
 val_file: data/processed/shakespeare_validation.txt
-vocab_file: tokenizer/vocab.json
-vocab_size: 2000
+vocab_file: tokenizer/char_vocab.json
+vocab_size: 64
 
-batch_size: 32
-lr: 5e-4
-epochs: 20
+batch_size: 64
+lr: 3e-4
+epochs: 100
 pretrain_file: null
 pretrain_epochs: 0
 
 model:
-  embed_dim: 512
-  num_heads: 8
-  ff_dim: 2048
+  embed_dim: 384
+  num_heads: 6
+  ff_dim: 1536
   num_layers: 6
-  max_len: 256
+  max_len: 48
   dropout: 0.1
   positional_encoding: learned
 
