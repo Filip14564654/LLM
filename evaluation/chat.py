@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from tokenizer.bpe_tokenizer import BPETokenizer
 from model.transformer import TransformerModel
-from utils.functions import load_config, stable_hash, latest_version_path
+from utils.functions import load_config, stable_hash, latest_version_path, load_vocab_mapping, token_to_id
 
 CONFIG = load_config()
 
@@ -98,7 +98,8 @@ def main():
             break
         tokens = tokenizer.tokenize(text)
         flat = [t for sub in tokens for t in sub]
-        ids = [stable_hash(t, CONFIG["vocab_size"]) for t in flat]
+        vocab_mapping = load_vocab_mapping(CONFIG["vocab_file"])
+        ids = [token_to_id(t, vocab_mapping, CONFIG["vocab_size"]) for t in flat]
         if not ids:
             print("Model: <no input>")
             continue

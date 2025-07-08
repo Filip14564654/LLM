@@ -1,19 +1,24 @@
 # Default training configuration
-train_file: data/processed/shakespeare_train.txt
-val_file: data/processed/shakespeare_validation.txt
+train_file: openwebtext/train.txt
+val_file: openwebtext/val.txt
 vocab_file: tokenizer/vocab.json
-vocab_size: 10000
-batch_size: 4
-lr: 0.001
+vocab_size: 32000  # Zvětšeno z 10000 na 32000 aby se vyhnul kolizím
+batch_size: 32  # Zvětšeno z 4 na 32 pro lepší gradient estimates
+lr: 0.0003  # Sníženo z 0.001 pro stabilnější učení
 pretrain_file: data/processed/general_sample.txt
 pretrain_epochs: 1
-epochs: 3
+epochs: 5  # Sníženo z 10 na 5 - early stopping se postará o zbytek
 model:
   embed_dim: 128
   num_heads: 4
   ff_dim: 256
   num_layers: 4
-  max_len: 512
-  dropout: 0.1
+  max_len: 256  # Sníženo z 512 pro efektivnější trénování
+  dropout: 0.2  # Zvýšeno z 0.1 na 0.2 pro lepší regularizaci
   positional_encoding: learned
 checkpoint_path: model_checkpoint.pt
+
+# Early stopping configuration
+early_stopping:
+  patience: 3  # Počet epoch bez zlepšení před zastavením
+  min_delta: 0.001  # Minimální zlepšení pro resetování patience
