@@ -79,6 +79,26 @@ class BPETokenizer:
     def tokenize(self, text):
         return [self.encode(word) for word in text.strip().split()]
 
+    def detokenize(self, token_ids):
+        inv_vocab = {v: k for k, v in self.vocab.items() if isinstance(v, int)}
+        tokens = [inv_vocab.get(i, "<unk>") for i in token_ids]
+        words = []
+        current_word = ""
+        for token in tokens:
+            if token == "</w>":
+                words.append(current_word)
+                current_word = ""
+            elif token.endswith("</w>"):
+                current_word += token[:-4]
+                words.append(current_word)
+                current_word = ""
+            else:
+                current_word += token
+        if current_word:
+            words.append(current_word)
+        return " ".join(words)
+
+
 # Tato implementace bpe_tokenizer.py vychází z principů a struktury, které se objevují například v repozitářích:
 #            minGPT – ručně řízený tokenizer s podporou subword tokenizace.
 #            NanoGPT – jednoduché načtení vlastního slovníku a tokenizace.
