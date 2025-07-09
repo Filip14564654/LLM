@@ -1,5 +1,5 @@
 # Default training configuration
-train_file: openwebtext/train.txt
+train_file: openwebtext/train1.txt
 val_file: openwebtext/val.txt
 vocab_file: tokenizer/vocab.json
 vocab_size: 32000  # Zvětšeno z 10000 na 32000 aby se vyhnul kolizím

@@ -12,6 +12,21 @@ from utils.functions import load_config, stable_hash, next_version_path, load_vo
 
 CONFIG = load_config()
 
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+
+WANDB_API_KEY = os.environ.get('WANDB_API_KEY', None)
+if WANDB_AVAILABLE and not WANDB_API_KEY:
+    WANDB_API_KEY = '37199f87dd64de4826d9428418688640f5159f24'
+    os.environ['WANDB_API_KEY'] = WANDB_API_KEY
+    try:
+        wandb.login(key=WANDB_API_KEY, relogin=True)
+    except Exception as e:
+        print(f"[WARN] wandb login selhal: {e}")
+
 # === Dataset ===
 class TextIterableDataset(IterableDataset):
     def __init__(self, filepath, tokenizer, vocab_mapping):
@@ -65,7 +80,7 @@ def count_lines(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             for i, _ in enumerate(f, 1):
                 if i > 10_000_000:
-                    print(f"[WARN] Soubor {filepath} má více než 10 milionů řádků, používám odhad.")
+                    #print(f"[WARN] Soubor {filepath} má více než 10 milionů řádků, používám odhad.")
                     return 10_000_000
             return i
     except Exception as e:
@@ -95,7 +110,7 @@ def main():
 
     # Spočítej počet batchů pro scheduler
     num_train_lines = count_lines(CONFIG["train_file"])
-    batches_per_epoch = max(1, num_train_lines // CONFIG["batch_size"])
+    batches_per_epoch = (num_train_lines + CONFIG["batch_size"] - 1) // CONFIG["batch_size"]
     T_max = batches_per_epoch * (CONFIG.get("epochs", 0) + pretrain_epochs)
 
     if pretrain_file and pretrain_epochs > 0:
@@ -135,7 +150,16 @@ def main():
     patience = 3  # Počet epoch bez zlepšení
     patience_counter = 0
 
-    def train_epoch(loader, epoch_desc=""):
+    if WANDB_AVAILABLE:
+        wandb.init(
+            project='llm-training',
+            name='transformer-run',
+            config=CONFIG,
+            reinit=True,
+            anonymous=None
+        )
+
+    def train_epoch(loader, epoch_desc="", total_batches=None):
         try:
             dataset_len = len(loader.dataset)
         except TypeError:
@@ -164,11 +188,15 @@ def main():
             if i % 10 == 0:
                 avg_loss = total_loss / num_batches if num_batches > 0 else 0
                 elapsed = time.time() - start_time
-                try:
-                    loader_len = len(loader)
-                except TypeError:
-                    loader_len = 'N/A'
+                loader_len = total_batches if total_batches is not None else 'N/A'
                 print(f"[{epoch_desc}Batch {i}/{loader_len}] Loss: {loss.item():.4f}, Avg Loss: {avg_loss:.4f}, Elapsed: {elapsed:.1f}s")
+                if WANDB_AVAILABLE:
+                    wandb.log({
+                        'train/loss': loss.item(),
+                        'train/avg_loss': avg_loss,
+                        'train/batch': i,
+                        'train/epoch': epoch_desc
+                    })
                 total_loss = 0
                 num_batches = 0
                 start_time = time.time()
@@ -184,12 +212,14 @@ def main():
     for epoch in range(CONFIG["epochs"]):
         print(f"\n[TRAIN] Epoch {epoch+1}/{CONFIG['epochs']}")
         epoch_start = time.time()
-        train_epoch(train_loader, epoch_desc=f"Epoch {epoch} | ")
+        train_epoch(train_loader, epoch_desc=f"Epoch {epoch} | ", total_batches=batches_per_epoch)
         print(f"[INFO] Epoch {epoch+1} trénink hotov za {time.time()-epoch_start:.1f}s")
 
         # === Validace ===
         ppl = evaluate(model, val_loader, criterion, device)
         print(f"[Epoch {epoch}] Validace perplexity: {ppl:.2f}")
+        if WANDB_AVAILABLE:
+            wandb.log({'val/perplexity': ppl, 'val/epoch': epoch})
         
         # === Early stopping ===
         if ppl < best_val_ppl:
@@ -214,6 +244,9 @@ def main():
             break
 
     print("\n=== [KONEC] Trénink dokončen ===\n")
+
+    if WANDB_AVAILABLE:
+        wandb.finish()
 
 
 if __name__ == "__main__":

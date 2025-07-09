@@ -1,0 +1,92 @@
+
+[PRETRAIN] Epoch 1/1
+[DEBUG] Spouštím train_epoch pro Pretrain 0 |  s N/A vzorky, batch_size=32
+[Pretrain 0 | Batch 0/N/A] Loss: 10.6986, Avg Loss: 10.6986, Elapsed: 0.2s
+[DEBUG] train_epoch pro Pretrain 0 |  dokončen.
+
+[TRAIN] Epoch 1/5
+[DEBUG] Spouštím train_epoch pro Epoch 0 |  s N/A vzorky, batch_size=32
+[Epoch 0 | Batch 0/3125] Loss: 10.3844, Avg Loss: 10.3844, Elapsed: 0.2s
+[Epoch 0 | Batch 10/3125] Loss: 8.0077, Avg Loss: 9.0990, Elapsed: 1.1s
+[Epoch 0 | Batch 20/3125] Loss: 7.1854, Avg Loss: 7.7352, Elapsed: 1.1s
+[Epoch 0 | Batch 30/3125] Loss: 6.6713, Avg Loss: 6.6786, Elapsed: 1.1s
+[Epoch 0 | Batch 40/3125] Loss: 5.6283, Avg Loss: 5.8111, Elapsed: 1.1s
+[Epoch 0 | Batch 50/3125] Loss: 5.0013, Avg Loss: 4.9513, Elapsed: 1.1s
+[Epoch 0 | Batch 60/3125] Loss: 3.9409, Avg Loss: 4.0675, Elapsed: 1.1s
+[Epoch 0 | Batch 70/3125] Loss: 3.3700, Avg Loss: 3.5074, Elapsed: 1.1s
+[Epoch 0 | Batch 80/3125] Loss: 2.8391, Avg Loss: 3.0752, Elapsed: 1.1s
+[Epoch 0 | Batch 90/3125] Loss: 2.1188, Avg Loss: 2.5654, Elapsed: 1.1s
+[Epoch 0 | Batch 100/3125] Loss: 2.0801, Avg Loss: 2.3318, Elapsed: 1.1s
+[Epoch 0 | Batch 110/3125] Loss: 2.2013, Avg Loss: 2.2318, Elapsed: 1.1s
+[Epoch 0 | Batch 120/3125] Loss: 2.2198, Avg Loss: 1.9371, Elapsed: 1.1s
+[Epoch 0 | Batch 130/3125] Loss: 1.8962, Avg Loss: 1.9718, Elapsed: 1.1s
+[Epoch 0 | Batch 140/3125] Loss: 1.7658, Avg Loss: 1.8492, Elapsed: 1.1s
+[Epoch 0 | Batch 150/3125] Loss: 1.6840, Avg Loss: 1.8973, Elapsed: 1.1s
+[Epoch 0 | Batch 160/3125] Loss: 1.5788, Avg Loss: 1.8434, Elapsed: 1.1s
+[Epoch 0 | Batch 170/3125] Loss: 1.8591, Avg Loss: 1.8263, Elapsed: 1.1s
+[Epoch 0 | Batch 180/3125] Loss: 2.2376, Avg Loss: 1.8297, Elapsed: 1.1s
+[Epoch 0 | Batch 190/3125] Loss: 1.9175, Avg Loss: 1.8376, Elapsed: 1.1s
+[Epoch 0 | Batch 200/3125] Loss: 1.6065, Avg Loss: 1.8328, Elapsed: 1.1s
+[Epoch 0 | Batch 210/3125] Loss: 1.7248, Avg Loss: 1.7830, Elapsed: 1.1s
+[Epoch 0 | Batch 220/3125] Loss: 1.6935, Avg Loss: 1.6649, Elapsed: 1.1s
+[Epoch 0 | Batch 230/3125] Loss: 1.6874, Avg Loss: 1.7257, Elapsed: 1.1s
+[Epoch 0 | Batch 240/3125] Loss: 1.9202, Avg Loss: 1.7613, Elapsed: 1.2s
+[Epoch 0 | Batch 250/3125] Loss: 1.8260, Avg Loss: 1.7365, Elapsed: 1.4s
+[Epoch 0 | Batch 260/3125] Loss: 1.7942, Avg Loss: 1.7937, Elapsed: 1.3s
+[Epoch 0 | Batch 270/3125] Loss: 1.8015, Avg Loss: 1.7233, Elapsed: 1.3s
+[Epoch 0 | Batch 280/3125] Loss: 1.5650, Avg Loss: 1.6561, Elapsed: 1.3s
+[Epoch 0 | Batch 290/3125] Loss: 1.6438, Avg Loss: 1.7283, Elapsed: 1.4s
+[Epoch 0 | Batch 300/3125] Loss: 1.8463, Avg Loss: 1.7580, Elapsed: 1.3s
+[Epoch 0 | Batch 310/3125] Loss: 1.7424, Avg Loss: 1.7400, Elapsed: 1.3s
+[Epoch 0 | Batch 320/3125] Loss: 1.8574, Avg Loss: 1.7768, Elapsed: 1.3s
+[Epoch 0 | Batch 330/3125] Loss: 1.6400, Avg Loss: 1.5942, Elapsed: 1.1s
+[Epoch 0 | Batch 340/3125] Loss: 1.8922, Avg Loss: 1.7533, Elapsed: 1.1s
+[Epoch 0 | Batch 350/3125] Loss: 1.8353, Avg Loss: 1.6552, Elapsed: 1.1s
+[Epoch 0 | Batch 360/3125] Loss: 1.5511, Avg Loss: 1.7197, Elapsed: 1.1s
+[Epoch 0 | Batch 370/3125] Loss: 1.8951, Avg Loss: 1.7981, Elapsed: 1.1s
+[Epoch 0 | Batch 380/3125] Loss: 1.9397, Avg Loss: 1.7781, Elapsed: 1.1s
+[Epoch 0 | Batch 390/3125] Loss: 1.8755, Avg Loss: 1.6980, Elapsed: 1.1s
+[Epoch 0 | Batch 400/3125] Loss: 1.7315, Avg Loss: 1.5928, Elapsed: 1.1s
+[Epoch 0 | Batch 410/3125] Loss: 1.7185, Avg Loss: 1.6043, Elapsed: 1.1s
+[Epoch 0 | Batch 420/3125] Loss: 1.5797, Avg Loss: 1.6132, Elapsed: 1.1s
+[Epoch 0 | Batch 430/3125] Loss: 1.7987, Avg Loss: 1.6392, Elapsed: 1.1s
+[Epoch 0 | Batch 440/3125] Loss: 1.4254, Avg Loss: 1.6019, Elapsed: 1.1s
+[Epoch 0 | Batch 450/3125] Loss: 1.3942, Avg Loss: 1.6388, Elapsed: 1.1s
+[Epoch 0 | Batch 460/3125] Loss: 1.5989, Avg Loss: 1.6139, Elapsed: 1.1s
+[Epoch 0 | Batch 470/3125] Loss: 1.2490, Avg Loss: 1.6662, Elapsed: 1.1s
+[Epoch 0 | Batch 480/3125] Loss: 1.8790, Avg Loss: 1.6780, Elapsed: 1.1s
+[Epoch 0 | Batch 490/3125] Loss: 1.5332, Avg Loss: 1.5963, Elapsed: 1.1s
+[Epoch 0 | Batch 500/3125] Loss: 1.4687, Avg Loss: 1.6110, Elapsed: 1.1s
+[Epoch 0 | Batch 510/3125] Loss: 1.6322, Avg Loss: 1.6413, Elapsed: 1.1s
+[Epoch 0 | Batch 520/3125] Loss: 1.5089, Avg Loss: 1.6115, Elapsed: 1.1s
+[Epoch 0 | Batch 530/3125] Loss: 1.4871, Avg Loss: 1.6019, Elapsed: 1.1s
+[Epoch 0 | Batch 540/3125] Loss: 1.5789, Avg Loss: 1.6741, Elapsed: 1.1s
+[Epoch 0 | Batch 550/3125] Loss: 1.6951, Avg Loss: 1.5931, Elapsed: 1.1s
+[Epoch 0 | Batch 560/3125] Loss: 1.9455, Avg Loss: 1.7551, Elapsed: 1.1s
+[Epoch 0 | Batch 570/3125] Loss: 1.5079, Avg Loss: 1.5986, Elapsed: 1.1s
+[Epoch 0 | Batch 580/3125] Loss: 1.6772, Avg Loss: 1.6691, Elapsed: 1.1s
+[Epoch 0 | Batch 590/3125] Loss: 1.5225, Avg Loss: 1.7208, Elapsed: 1.1s
+[Epoch 0 | Batch 600/3125] Loss: 1.6603, Avg Loss: 1.6264, Elapsed: 1.1s
+[Epoch 0 | Batch 610/3125] Loss: 1.8106, Avg Loss: 1.6965, Elapsed: 1.1s
+[Epoch 0 | Batch 620/3125] Loss: 1.5014, Avg Loss: 1.5772, Elapsed: 1.1s
+[Epoch 0 | Batch 630/3125] Loss: 1.6607, Avg Loss: 1.6356, Elapsed: 1.1s
+[Epoch 0 | Batch 640/3125] Loss: 1.6778, Avg Loss: 1.6278, Elapsed: 1.1s
+[Epoch 0 | Batch 650/3125] Loss: 1.7543, Avg Loss: 1.5778, Elapsed: 1.1s
+[Epoch 0 | Batch 660/3125] Loss: 1.7409, Avg Loss: 1.6482, Elapsed: 1.1s
+[Epoch 0 | Batch 670/3125] Loss: 1.5195, Avg Loss: 1.5727, Elapsed: 1.1s
+[Epoch 0 | Batch 680/3125] Loss: 1.2921, Avg Loss: 1.6007, Elapsed: 1.2s
+[Epoch 0 | Batch 690/3125] Loss: 1.3622, Avg Loss: 1.5806, Elapsed: 1.1s
+[Epoch 0 | Batch 700/3125] Loss: 1.7133, Avg Loss: 1.6907, Elapsed: 1.1s
+[Epoch 0 | Batch 710/3125] Loss: 1.5171, Avg Loss: 1.5870, Elapsed: 1.1s
+Traceback (most recent call last):
+  File "C:\Users\Šunka\Documents\GitHub\LLM\training\train.py", line 253, in <module>
+    main()
+  File "C:\Users\Šunka\Documents\GitHub\LLM\training\train.py", line 215, in main
+    train_epoch(train_loader, epoch_desc=f"Epoch {epoch} | ", total_batches=batches_per_epoch)
+  File "C:\Users\Šunka\Documents\GitHub\LLM\training\train.py", line 182, in train_epoch
+    loss.backward()
+  File "C:\Users\Šunka\AppData\Roaming\Python\Python311\site-packages\torch\_tensor.py", line 492, in backward
+    torch.autograd.backward(
+  File "C:\Users\Šunka\AppData\Roaming\Python\Python311\site-packages\torch\autograd\__init__.py", line 251, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+KeyboardInterrupt
