@@ -1,89 +1,77 @@
 import torch
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import json
 import yaml
-from training.test_train import TransformerLanguageModel  # přizpůsob cestu podle umístění modelu
-from tokenizer.char_tokenizer import CharTokenizer  # nový tokenizer
+import json
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from tokenizer.char_tokenizer import CharTokenizer
+from training.test_train import TransformerLanguageModel
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def load_config(path="config.yaml"):
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
-def load_model(tokenizer, config):
+
+def load_model_and_tokenizer(config):
+    # === Tokenizer ===
+    tokenizer = CharTokenizer()
+    tokenizer.load(config["vocab_file"])
+    print(f"[DEBUG] Skutečná velikost slovníku po trénování: {tokenizer.vocab_size()}")
+
+    # === Model ===
+    checkpoint = torch.load(config["checkpoint_path"], map_location=DEVICE)
+    model_args = checkpoint["model_args"]
+
     model = TransformerLanguageModel(
-        vocab_size=len(tokenizer.vocab),
-        d_model=config["model"]["embed_dim"],
-        nhead=config["model"]["num_heads"],
-        num_layers=config["model"]["num_layers"]
+        vocab_size=model_args["vocab_size"],
+        d_model=model_args["d_model"],
+        nhead=model_args["nhead"],
+        num_layers=model_args["num_layers"],
+        max_len=model_args["max_len"],
+        dropout=model_args.get("dropout", 0.1),
     ).to(DEVICE)
-    model.load_state_dict(torch.load(config["checkpoint_path"], map_location=DEVICE))
+
+    model.load_state_dict(checkpoint["model"])
     model.eval()
-    return model
+
+    return model, tokenizer, model_args["max_len"]
+
 
 @torch.no_grad()
-def generate(model, tokenizer, prompt, config, max_new_tokens=50):
-    input_ids = tokenizer.encode(prompt)[:config["model"]["max_len"] - 1]  # -1 pro <eos> token
-
-    if not input_ids:
-        print("[ERROR] Tokenizer nerozpoznal žádné tokeny – prompt je mimo slovník.")
-        return "<unk>"
-
+def generate(model, tokenizer, prompt, max_len, max_new_tokens=100, temperature=1.0, top_k=50):
+    input_ids = tokenizer.encode(prompt)
+    input_ids = input_ids[:max_len - 1]
     input_tensor = torch.tensor([input_ids], dtype=torch.long).to(DEVICE)
-
-    temperature = 1.5
-    k = 50
-    repetition_counts = {}
-    last_tokens = []
 
     for _ in range(max_new_tokens):
         logits = model(input_tensor)
-        next_token_logits = logits[0, -1, :]
+        logits = logits[0, -1, :] / temperature
 
-        # Penalizace opakujících se tokenů
-        for token_id, count in repetition_counts.items():
-            if count >= 3:
-                next_token_logits[token_id] -= 1.0
+        # Top-k sampling
+        if top_k is not None:
+            top_k = min(top_k, logits.size(-1))
+            values, _ = torch.topk(logits, top_k)
+            logits[logits < values[-1]] = -float("Inf")
 
-        # Top-k ořezání + teplota
-        filtered_logits = top_k_logits(next_token_logits.unsqueeze(0), k)
-        probs = torch.softmax(filtered_logits / temperature, dim=-1)
-        next_token = torch.multinomial(probs, num_samples=1).item()
+        probs = torch.softmax(logits, dim=-1)
+        next_token = torch.multinomial(probs, num_samples=1)
+        input_tensor = torch.cat([input_tensor, next_token.unsqueeze(0)], dim=1)
 
-        # Historie pro penalizaci
-        repetition_counts[next_token] = repetition_counts.get(next_token, 0) + 1
-        last_tokens.append(next_token)
-        if len(last_tokens) > 10:
-            last_tokens.pop(0)
-            if all(t == last_tokens[0] for t in last_tokens):
-                print("[INFO] Ukončeno kvůli opakování tokenů.")
-                break
-
-        input_tensor = torch.cat(
-            [input_tensor, torch.tensor([[next_token]], device=DEVICE)], dim=1
-        )
+        if input_tensor.size(1) >= max_len:
+            break
 
     output_ids = input_tensor[0].tolist()
     return tokenizer.decode(output_ids)
 
 
-def top_k_logits(logits, k):
-    values, _ = torch.topk(logits, k)
-    min_values = values[:, -1].unsqueeze(1)
-    return torch.where(logits < min_values, torch.full_like(logits, -float('Inf')), logits)
-
 def main():
-    config = load_config("config.yaml")
+    config = load_config()
     print("[INFO] Načítám tokenizer a model...")
-    tokenizer = CharTokenizer()
-    tokenizer.load(config["vocab_file"])
-    print(f"[DEBUG] Skutečná velikost slovníku po trénování: {len(tokenizer.vocab)}")
-    model = load_model(tokenizer, config)
-    print(tokenizer.encode("Caius"))
-
+    model, tokenizer, max_len = load_model_and_tokenizer(config)
 
     print("[READY] Zadej prompt (prázdný vstup ukončí program):")
     while True:
@@ -91,10 +79,11 @@ def main():
         if not prompt:
             print("Ukončuji...")
             break
-        output = generate(model, tokenizer, prompt, config, max_new_tokens=config["model"]["max_len"] - 1)
+        output = generate(model, tokenizer, prompt, max_len=max_len, max_new_tokens=max_len - len(prompt))
         print("=== VÝSTUP ===")
         print(output)
         print("=" * 40)
+
 
 if __name__ == "__main__":
     main()
