@@ -1,13 +1,13 @@
 # Default training configuration
-train_file: openwebtext/train1.txt
-val_file: openwebtext/val.txt
+train_file: data/dataset/train1.txt
+val_file: data/dataset/val1.txt
 vocab_file: tokenizer/vocab.json
 vocab_size: 32000  # Zvětšeno z 10000 na 32000 aby se vyhnul kolizím
 batch_size: 32  # Zvětšeno z 4 na 32 pro lepší gradient estimates
 lr: 0.0003  # Sníženo z 0.001 pro stabilnější učení
 pretrain_file: data/processed/general_sample.txt
 pretrain_epochs: 1
-epochs: 5  # Sníženo z 10 na 5 - early stopping se postará o zbytek
+epochs: 10  # Sníženo z 10 na 5 - early stopping se postará o zbytek
 model:
   embed_dim: 128
   num_heads: 4

@@ -20,7 +20,7 @@ except ImportError:
 
 WANDB_API_KEY = os.environ.get('WANDB_API_KEY', None)
 if WANDB_AVAILABLE and not WANDB_API_KEY:
-    WANDB_API_KEY = '37199f87dd64de4826d9428418688640f5159f24'
+    WANDB_API_KEY = 'd6bdcf5302d3db3d67a19ca99d00a47442313e71'
     os.environ['WANDB_API_KEY'] = WANDB_API_KEY
     try:
         wandb.login(key=WANDB_API_KEY, relogin=True)
@@ -54,12 +54,21 @@ def collate_fn(batch):
     return torch.stack(padded)
 
 
-def evaluate(model, loader, criterion, device):
+def evaluate(model, loader, criterion, device, max_batches=100):
+    print("[DEBUG] Spouštím evaluate()")
     model.eval()
     total_loss, total_tokens = 0, 0
     with torch.no_grad():
-        for batch in loader:
+        for i, batch in enumerate(loader):
+            if i >= max_batches:
+                print(f"[DEBUG] Překročen limit {max_batches} batchů, ukončuji evaluate().")
+                break
+
+            print(f"[DEBUG] Batch shape: {batch.shape}")
             batch = batch.to(device)
+            if batch.size(1) < 2:
+                continue
+
             inputs = batch[:, :-1]
             targets = batch[:, 1:]
 
@@ -71,8 +80,13 @@ def evaluate(model, loader, criterion, device):
             total_loss += loss.item() * targets.size(0)
             total_tokens += targets.size(0)
 
+    if total_tokens == 0:
+        return float('inf')
+
     perplexity = torch.exp(torch.tensor(total_loss / total_tokens))
     return perplexity.item()
+
+
 
 
 def count_lines(filepath):
@@ -89,6 +103,7 @@ def count_lines(filepath):
 
 
 def main():
+    print("[DEBUG] Spouštím evaluate()")
     print("\n=== [START] Trénink modelu ===\n")
     print(f"[INFO] Zařízení: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
     print(f"[INFO] Konfigurace: batch_size={CONFIG['batch_size']}, epochs={CONFIG['epochs']}, lr={CONFIG['lr']}")
