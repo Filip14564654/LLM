@@ -20,41 +20,43 @@ def load_config(path="config.yaml"):
 
 # === 2. Dataset pro znakovou tokenizaci ===
 class CharTextDataset(Dataset):
-    def __init__(self, texts, tokenizer, max_length=128):
-        self.tokenizer = tokenizer
-        self.max_length = max_length
-        self.data = []
+    """Continuous character dataset with random slicing like nanoGPT."""
 
-        for text in texts:
-            tokens = tokenizer.encode(text.strip())
-            if len(tokens) < 2:
-                continue
-            for i in range(0, len(tokens) - max_length):
-                x = tokens[i:i + max_length]
-                y = tokens[i + 1:i + 1 + max_length]
-                self.data.append((x, y))
-
+    def __init__(self, token_ids, block_size: int):
+        self.data = torch.tensor(token_ids, dtype=torch.long)
+        self.block_size = block_size
     def __len__(self):
-        return len(self.data)
+        return len(self.data) - self.block_size
 
     def __getitem__(self, idx):
-        x, y = self.data[idx]
-        return torch.tensor(x, dtype=torch.long), torch.tensor(y, dtype=torch.long)
+        x = self.data[idx:idx + self.block_size]
+        y = self.data[idx + 1:idx + 1 + self.block_size]
+        return x, y
 
 # === 3. Jednoduchý Transformer Encoder ===
 class TransformerLanguageModel(nn.Module):
-    def __init__(self, vocab_size, d_model, nhead=4, num_layers=4):
+    """Minimal GPT-style model with positional embeddings and causal masking."""
+
+    def __init__(self, vocab_size, d_model, nhead=4, num_layers=4, max_len=256, dropout=0.1):
         super().__init__()
-        self.embedding = nn.Embedding(vocab_size, d_model)
-        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead)
+        self.token_emb = nn.Embedding(vocab_size, d_model)
+        self.pos_emb = nn.Embedding(max_len, d_model)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead,
+                                                  dropout=dropout, activation='gelu')
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-        self.fc_out = nn.Linear(d_model, vocab_size)
+        self.fc_out = nn.Linear(d_model, vocab_size, bias=False)
+        self.fc_out.weight = self.token_emb.weight  # weight tying
+        self.dropout = nn.Dropout(dropout)
+        self.max_len = max_len
 
     def forward(self, input_ids, attention_mask=None):
-        x = self.embedding(input_ids)
-        x = x.permute(1, 0, 2)  # (seq_len, batch, d_model)
-        x = self.transformer_encoder(x)
-        x = x.permute(1, 0, 2)  # (batch, seq_len, d_model)
+        B, T = input_ids.shape
+        pos = torch.arange(0, T, device=input_ids.device)
+        x = self.token_emb(input_ids) + self.pos_emb(pos)
+        x = self.dropout(x).permute(1, 0, 2)
+        mask = nn.Transformer.generate_square_subsequent_mask(T).to(input_ids.device)
+        x = self.transformer_encoder(x, mask=mask)
+        x = x.permute(1, 0, 2)
         logits = self.fc_out(x)
         return logits
 
@@ -105,22 +107,20 @@ def main():
         print(f"Aktivní zařízení: {torch.cuda.current_device()}")
         print(f"Název zařízení: {torch.cuda.get_device_name(0)}")
 
-    # === Načtení trénovacích dat ===
+    # === Načtení trénovacích dat jako kontinuální text ===
     with open(config["train_file"], "r", encoding="utf-8") as f:
-        texts = [line.strip() for line in f if line.strip()]
-    
+        full_text = f.read()
+
     # === Tokenizer ===
-    tokenizer = CharTokenizer()  # 🔄 změna z BPETokenizer
-    tokenizer.build_vocab(texts)
-    print("[DEBUG] Tokenizace 5 řádků:")
-    for i in range(5):
-        line = texts[i].strip()
-        tokens = tokenizer.encode(line)
-        print(f"  {repr(line)} → {tokens} ({len(tokens)} znaků)")
+    tokenizer = CharTokenizer()
+    tokenizer.build_vocab([full_text])
+    sample = full_text.splitlines()[0]
+    print("[DEBUG] Ukázka tokenizace:", tokenizer.encode(sample)[:20])
     print(f"Velikost slovníku: {tokenizer.vocab_size()}")
 
     # === Dataset a DataLoader ===
-    dataset = CharTextDataset(texts, tokenizer, max_length=config["model"]["max_len"])
+    tokens = tokenizer.encode(full_text)
+    dataset = CharTextDataset(tokens, block_size=config["model"]["max_len"])
     print(f"[DEBUG] Počet trénovacích vzorků: {len(dataset)}")
     print("[DEBUG] První 3 vzorky (x→y):")
     for i in range(3):
@@ -132,10 +132,12 @@ def main():
 
     # === Model ===
     model = TransformerLanguageModel(
-        vocab_size=tokenizer.vocab_size(),  # 🔄
+        vocab_size=tokenizer.vocab_size(),
         d_model=config["model"]["embed_dim"],
         nhead=config["model"]["num_heads"],
-        num_layers=config["model"]["num_layers"]
+        num_layers=config["model"]["num_layers"],
+        max_len=config["model"]["max_len"],
+        dropout=config["model"].get("dropout", 0.1),
     ).to(DEVICE)
 
     # === Optimalizátor s weight decay ===
